@@ -96,7 +96,9 @@ func main() {
 
 				if receiverTypeName == *targetStruct {
 					var sig bytes.Buffer
-					printer.Fprint(&sig, fset, funcDecl.Type)
+					if err := printer.Fprint(&sig, fset, funcDecl.Type); err != nil {
+						log.Fatalf("Failed to print function signature: %v", err)
+					}
 					methodSignature := strings.TrimPrefix(sig.String(), "func")
 
 					// check if the function has a comment
@@ -139,7 +141,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create output file: %s", err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Fatalf("Failed to close output file: %s", err)
+		}
+	}()
 
 	if err := tmpl.Execute(f, data); err != nil {
 		panic(fmt.Errorf("failed to execute template: %s", err))
